@@ -30,7 +30,7 @@ public final class Context<T extends Trait> {
     private final Model model;
     private final ServiceShape service;
     private final JsonSchemaConverter jsonSchemaConverter;
-    private final T protocolTrait;
+    private final Trait protocolTrait;
     private final OpenApiProtocol<T> openApiProtocol;
     private final SchemaDocument schemas;
     private final List<SecuritySchemeConverter<? extends Trait>> securitySchemeConverters;
@@ -50,7 +50,7 @@ public final class Context<T extends Trait> {
         this.service = service;
         this.config = config;
         this.jsonSchemaConverter = jsonSchemaConverter;
-        this.protocolTrait = service.expectTrait(openApiProtocol.getProtocolType());
+        this.protocolTrait = service.getAllTraits().values().stream().filter(t ->t.getClass().getCanonicalName().equals(openApiProtocol.getProtocolType().getCanonicalName())).findFirst().orElseThrow(()->new RuntimeException("Protocol trait not found"));
         this.openApiProtocol = openApiProtocol;
         this.schemas = schemas;
         this.securitySchemeConverters = securitySchemeConverters;
@@ -99,7 +99,7 @@ public final class Context<T extends Trait> {
      *
      * @return Returns the protocol ID.
      */
-    public T getProtocolTrait() {
+    public Trait getProtocolTrait() {
         return protocolTrait;
     }
 
