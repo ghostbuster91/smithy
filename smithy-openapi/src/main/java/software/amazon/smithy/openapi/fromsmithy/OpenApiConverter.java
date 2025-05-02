@@ -295,13 +295,13 @@ public final class OpenApiConverter {
     }
 
     private static final class ConversionEnvironment<T extends Trait> {
-        private final Context<T> context;
+        private final Context<Trait> context;
         private final List<Smithy2OpenApiExtension> extensions;
         private final ComponentsObject.Builder components;
         private final OpenApiMapper mapper;
 
         private ConversionEnvironment(
-                Context<T> context,
+                Context<Trait> context,
                 List<Smithy2OpenApiExtension> extensions,
                 ComponentsObject.Builder components,
                 OpenApiMapper composedMapper
@@ -315,9 +315,9 @@ public final class OpenApiConverter {
 
     private <T extends Trait> OpenApi convertWithEnvironment(ConversionEnvironment<T> environment) {
         ServiceShape service = environment.context.getService();
-        Context<T> context = environment.context;
+        Context<Trait> context = environment.context;
         OpenApiMapper mapper = environment.mapper;
-        OpenApiProtocol<T> openApiProtocol = environment.context.getOpenApiProtocol();
+        OpenApiProtocol<Trait> openApiProtocol = environment.context.getOpenApiProtocol();
         String version = context.getConfig().getVersion().toString();
         OpenApi.Builder openapi = OpenApi.builder().openapi(version).info(createInfo(service));
 
@@ -357,12 +357,12 @@ public final class OpenApiConverter {
     ) {
         // Collect into a list so that a better error message can be presented if the
         // protocol converter can't be found.
-        List<OpenApiProtocol> protocolProviders = extensions.stream()
+        List<OpenApiProtocol<? extends Trait>> protocolProviders = extensions.stream()
                 .flatMap(e -> e.getProtocols().stream())
                 .collect(Collectors.toList());
 
         return protocolProviders.stream()
-                .filter(openApiProtocol -> openApiProtocol.getProtocolType().equals(protocolTrait.getClass()))
+                .filter(openApiProtocol -> openApiProtocol.getProtocolType().getCanonicalName().equals(protocolTrait.getClass().getCanonicalName()))
                 .findFirst()
                 .map(result -> (OpenApiProtocol<T>) result)
                 .orElseThrow(() -> {
